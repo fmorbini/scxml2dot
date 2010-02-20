@@ -52,8 +52,18 @@ sub printNodeHierEdge {
 sub printTrEdge {
     my($el,$pid,$color) = @_;
     #print Dumper($el);
-    if (exists($el->{'target'})) {
-	$tr.=generateEdgeForTransition($pid,$el->{'target'},$el->{'event'},$el->{'cond'},$color);
+    my $target;
+    if (exists($el->{'target'})){
+	$target=$el->{'target'};
+    } else {
+	if (exists($el->{'next'})) {
+	    $target=$el->{'next'};
+	} else {
+	    $target=$pid;
+	}
+    }
+    if ($target) {
+	$tr.=generateEdgeForTransition($pid,$target,$el->{'event'},$el->{'cond'},$color);
     }
 }
 
