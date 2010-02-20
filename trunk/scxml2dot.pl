@@ -21,16 +21,10 @@ sub generateEdgeForTransition {
     if (!exists($tr{$pid}{$childid}{$color})) {
 	$tr{$pid}{$childid}{$color}="";
     }
-    my $label="";
-    if (length($event)>0) {
-	$label.="EVENT=$event ";
-    }
-    if (length($cond)>0) {
-	$label.="COND=$cond ";
-    }
+    my $label="<TR><TD>$event</TD><TD>$cond</TD></TR>";
     if (length($label)>0) {
-	$tr{$pid}{$childid}{$color}.="$label\\n";
-    }   
+	$tr{$pid}{$childid}{$color}.="$label";
+    }
 }
 
 sub printNodeHierEdge {
@@ -196,7 +190,7 @@ print "subgraph tr {\n";
 foreach my $p (keys %tr) {
     foreach my $c (keys %{$tr{$p}}) {
 	foreach my $color (keys %{$tr{$p}{$c}}) {
-	    print "\"$p\"->\"$c\" [color=\"$color\", label=\"$tr{$p}{$c}{$color}\"];\n"
+	    print "\"$p\"->\"$c\" [color=\"$color\", label=<<TABLE><TR><TD>Event</TD><TD>Condition</TD></TR>$tr{$p}{$c}{$color}</TABLE>>];\n"
 	}
     }
 }
