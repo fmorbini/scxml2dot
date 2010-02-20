@@ -6,12 +6,22 @@ use Data::Dumper;
 my $ID=1;
 
 my $hier="";
-my $tr="";
+#my $tr="";
+my %tr=();
 
 sub generateEdgeForTransition {
     my ($pid,$childid,$event,$cond,$color)=@_;
+    my %tmp;
+    if (!exists($tr{$pid})) {
+	$tr{$pid}=();
+    }
+    if (!exists($tr{$pid}{$childid})) {
+	$tr{$pid}{$childid}=();
+    }
+    if (!exists($tr{$pid}{$childid}{$color})) {
+	$tr{$pid}{$childid}{$color}="";
+    }
     my $label="";
-    my $opts="";
     if (length($event)>0) {
 	$label.="EVENT=$event ";
     }
@@ -19,13 +29,8 @@ sub generateEdgeForTransition {
 	$label.="COND=$cond ";
     }
     if (length($label)>0) {
-	$opts.="label = \"$label\"";
-    }
-    if (length($color)>0) {
-	if (length($otps)>0) {$opts.=",";}
-	$opts.="color = $color";
-    }
-    return "\"$pid\"->\"$childid\" [$opts];\n";
+	$tr{$pid}{$childid}{$color}.="$label\\n";
+    }   
 }
 
 sub printNodeHierEdge {
@@ -63,12 +68,12 @@ sub printTrEdge {
 	}
     }
     if ($target) {
-	$tr.=generateEdgeForTransition($pid,$target,$el->{'event'},$el->{'cond'},$color);
+	generateEdgeForTransition($pid,$target,$el->{'event'},$el->{'cond'},$color);
     }
 }
 
 sub processElement {
-    my($states,$pid,$tr,$final,$inNewParallelContext)=@_;
+    my($states,$pid,$istr,$final,$inNewParallelContext)=@_;
     my $type=ref($states);
     my $printParallelContext=0;
     if ($inNewParallelContext==2) {
@@ -78,8 +83,8 @@ sub processElement {
     #print $type."\n";
     if ($type eq 'ARRAY') {
 	foreach $i (@$states) {
-	    if ($tr) {
-		printTrEdge($i,$pid);
+	    if ($istr) {
+		printTrEdge($i,$pid,"black");
 	    } else {
 		if ($printParallelContext){
 		    print "subgraph cluster$ID {\n";
@@ -94,8 +99,8 @@ sub processElement {
 	    }
 	}
     } elsif ($type eq 'HASH') {
-	if ($tr) {
-	    printTrEdge($states,$pid);
+	if ($istr) {
+	    printTrEdge($states,$pid,"black");
 	} else {
 	    if ($printParallelContext){
 		print "subgraph cluster$ID {\n";
@@ -118,9 +123,9 @@ sub addTransitionsToInitialNodes {
     my $v=$el->{'initial'};
     if (defined $v) {
 	if (ref($v) eq "HASH") {
-	    my $tr=$v->{'transition'};
-	    if (defined $tr) {
-		printTrEdge($tr,$pid,"red")
+	    my $istr=$v->{'transition'};
+	    if (defined $istr) {
+		printTrEdge($istr,$pid,"red")
 	    }
 	} else {
 	    my @ret=split(' ',$v);
@@ -132,14 +137,14 @@ sub addTransitionsToInitialNodes {
     $v=$el->{'initialstate'};
     if (defined $v) {
 	if (ref($v) eq "HASH") {
-	    my $tr=$v->{'transition'};
-	    if (defined $tr) {
-		printTrEdge($tr,$pid,"red")
+	    my $istr=$v->{'transition'};
+	    if (defined $istr) {
+		printTrEdge($istr,$pid,"red")
 	    }
 	} else {
 	    my @ret=split(' ',$v);
 	    foreach $i (@ret) {
-		$tr.=generateEdgeForTransition($pid,$i,"","","red");
+		generateEdgeForTransition($pid,$i,"","","red");
 	    }
 	}
     }
@@ -188,8 +193,13 @@ print "}\n";
 
 print "subgraph tr {\n";
 #print "edge [style=dashed];\n";
-print $tr;
+foreach my $p (keys %tr) {
+    foreach my $c (keys %{$tr{$p}}) {
+	foreach my $color (keys %{$tr{$p}{$c}}) {
+	    print "\"$p\"->\"$c\" [color=\"$color\", label=\"$tr{$p}{$c}{$color}\"];\n"
+	}
+    }
+}
 print "}\n";
 
 print "}\n";
-
