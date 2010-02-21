@@ -1,4 +1,16 @@
 #!/cygdrive/c/Perl/bin/perl
+# script to convert a scxml state machine into a graph in graphviz's dot language.
+# for more info on graphviz:
+#  http://www.graphviz.org/Documentation.php
+# for more info on scxml:
+#  http://www.w3.org/TR/scxml/
+#  http://commons.apache.org/scxml/guide/scxml-documents.html
+#  http://en.wikipedia.org/wiki/SCXML
+# INPUT: a scxml file
+# OUTPUT: on standard output a dot graph will be printed.
+# HOW TO PLOT the DOT graph: pipe it to dot -T pdf > file.pdf (dot supports many output formats, see its doc for details)
+#                            or scxml2dot.pl file.scxml > file.dot
+#                               dot -Tpdf file.dot > file.pdf
 use LWP::Simple;
 use XML::Simple;
 use Data::Dumper;
@@ -6,7 +18,6 @@ use Data::Dumper;
 my $ID=1;
 
 my $hier="";
-#my $tr="";
 my %tr=();
 
 sub generateEdgeForTransition {
@@ -167,26 +178,26 @@ sub getNodeHier {
     }
 }
 
-#compound state and parallel state should be handled like a root element
-#what to do for a root element:
-# find all transitions
 #check input argument presence
-($#ARGV==0) or die "one argument required: sessionid to retreive.";
+($#ARGV==0) or die "one argument required: scxml input file.";
 my $xs1 = XML::Simple->new();
 my $doc = $xs1->XMLin($ARGV[0],keyattr => []);
 #print Dumper($doc);
+
 print "digraph G {\n";
 print "graph [splines=false overlap=false];\n";
 
+#extract all the information required and print all the nodes.
 getNodeHier($doc,"root",0);
 
+#edges that define the hierarchy of nodes
 print "subgraph hier {\n";
 print "edge [style=dashed];\n";
 print $hier;
 print "}\n";
 
+#edges for the state transitions
 print "subgraph tr {\n";
-#print "edge [style=dashed];\n";
 foreach my $p (keys %tr) {
     foreach my $c (keys %{$tr{$p}}) {
 	foreach my $color (keys %{$tr{$p}{$c}}) {
