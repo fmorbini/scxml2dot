@@ -14,6 +14,7 @@
 use LWP::Simple;
 use XML::Simple;
 use Data::Dumper;
+use HTML::Entities;
 
 my $ID=1;
 
@@ -32,7 +33,7 @@ sub generateEdgeForTransition {
     if (!exists($tr{$pid}{$childid}{$color})) {
 	$tr{$pid}{$childid}{$color}="";
     }
-    my $label="<TR><TD>$event</TD><TD>$cond</TD></TR>";
+    my $label="<TR><TD>$event</TD><TD>".encode_entities($cond)."</TD></TR>";
     if (length($label)>0) {
 	$tr{$pid}{$childid}{$color}.="$label";
     }
